@@ -129,34 +129,36 @@ func (t *Tokenizer) scanStream() (*Token, error) {
 		//			}
 		//		}
 		//	}
-		//case commentState: // in a comment
-		//	{
-		//		switch nextRuneClassifiedClass {
-		//		case eofRuneClass:
-		//			{
-		//				token := &Token{
-		//					Type: Type,
-		//					Value:     string(Value)}
-		//				return token, err
-		//			}
-		//		case spaceRuneClass:
-		//			{
-		//				if nextRune == '\n' {
-		//					state = startState
-		//					token := &Token{
-		//						Type: Type,
-		//						Value:     string(Value)}
-		//					return token, err
-		//				} else {
-		//					Value = append(Value, nextRune)
-		//				}
-		//			}
-		//		default:
-		//			{
-		//				Value = append(Value, nextRune)
-		//			}
-		//		}
-		//	}
+		case commentState: // We are consuming comment, only EOL and EOF are stop comment's in the CueSheet files.
+			{
+				switch nextRuneClassifiedClass {
+				case eofRuneClass:
+					{
+						// We consider this case as end of comment, let's flush consumed runes in Token.
+						token := &Token{
+							Type:  CommentToken,
+							Value: string(value),
+						}
+						return token, err
+					}
+				//case spaceRuneClass:
+				//	{
+				//		if nextRune == '\n' {
+				//			state = startState
+				//			token := &Token{
+				//				Type:  Type,
+				//				Value: string(Value)}
+				//			return token, err
+				//		} else {
+				//			Value = append(Value, nextRune)
+				//		}
+				//	}
+				default:
+					{
+						value = append(value, nextRune)
+					}
+				}
+			}
 		default:
 			{
 				return nil, fmt.Errorf("unexpected state: %v", state)

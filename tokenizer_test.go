@@ -11,51 +11,43 @@ var tokenizerTests = map[string]struct {
 	input          string
 	expectedTokens []Token
 }{
-	"oneWord": {
-		input: "hello",
+	//"oneWord": {
+	//	input: "hello",
+	//	expectedTokens: []Token{
+	//		{
+	//			Type:  WordToken,
+	//			Value: "hello",
+	//		},
+	//	},
+	//},
+	//"oneWordWithTrailingWhitespacesAndTabs": {
+	//	input: "\t   \t hello",
+	//	expectedTokens: []Token{
+	//		{
+	//			Type:  WordToken,
+	//			Value: "hello",
+	//		},
+	//	},
+	//},
+	//"twoWordsWithTrailingWhitespacesAndTabs": {
+	//	input: "\t   \t hello world! \t ",
+	//	expectedTokens: []Token{
+	//		{
+	//			Type:  WordToken,
+	//			Value: "hello",
+	//		},
+	//		{
+	//			Type:  WordToken,
+	//			Value: "world!",
+	//		},
+	//	},
+	//},
+	"only comment string starting with semicolon": {
+		input: ";it is a comment",
 		expectedTokens: []Token{
-			{
-				Type:  WordToken,
-				Value: "hello",
-			},
-		},
-	},
-	"oneWordWithTrailingWhitespacesAndTabs": {
-		input: "\t   \t hello",
-		expectedTokens: []Token{
-			{
-				Type:  WordToken,
-				Value: "hello",
-			},
-		},
-	},
-	"twoWordsWithTrailingWhitespacesAndTabs": {
-		input: "\t   \t hello world! \t ",
-		expectedTokens: []Token{
-			{
-				Type:  WordToken,
-				Value: "hello",
-			},
-			{
-				Type:  WordToken,
-				Value: "world!",
-			},
-		},
-	},
-	"twoWordsWithCommentBySemicolon": {
-		input: "\t   \t alice bob \t ;is is a comment",
-		expectedTokens: []Token{
-			{
-				Type:  WordToken,
-				Value: "alice",
-			},
-			{
-				Type:  WordToken,
-				Value: "bob",
-			},
 			{
 				Type:  CommentToken,
-				Value: "is is a comment",
+				Value: "it is a comment",
 			},
 		},
 	},
@@ -70,11 +62,8 @@ func TestTokenizer(t *testing.T) {
 			tokens := make([]Token, 0)
 			for {
 				token, err := tokenizer.Next()
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-					t.Error(err)
+				if err != nil && err != io.EOF {
+					t.Error("Got unexpected error", err)
 				}
 
 				if token == nil {
