@@ -3,7 +3,6 @@ package cueparser
 import (
 	"github.com/google/go-cmp/cmp"
 	"io"
-	"strings"
 	"testing"
 )
 
@@ -15,7 +14,7 @@ var tokenizerTests = map[string]struct {
 	//	input: "hello",
 	//	expectedTokens: []Token{
 	//		{
-	//			Type:  WordToken,
+	//			Type:  TokenTypeWord,
 	//			Value: "hello",
 	//		},
 	//	},
@@ -24,7 +23,7 @@ var tokenizerTests = map[string]struct {
 	//	input: "\t   \t hello",
 	//	expectedTokens: []Token{
 	//		{
-	//			Type:  WordToken,
+	//			Type:  TokenTypeWord,
 	//			Value: "hello",
 	//		},
 	//	},
@@ -33,21 +32,21 @@ var tokenizerTests = map[string]struct {
 	//	input: "\t   \t hello world! \t ",
 	//	expectedTokens: []Token{
 	//		{
-	//			Type:  WordToken,
+	//			Type:  TokenTypeWord,
 	//			Value: "hello",
 	//		},
 	//		{
-	//			Type:  WordToken,
+	//			Type:  TokenTypeWord,
 	//			Value: "world!",
 	//		},
 	//	},
 	//},
-	"only comment string starting with semicolon": {
-		input: ";it is a comment",
+	"one letter comment starting with semicolon": {
+		input: ";x",
 		expectedTokens: []Token{
 			{
-				Type:  CommentToken,
-				Value: "it is a comment",
+				Type:  TokenTypeComment,
+				Value: "x",
 			},
 		},
 	},
@@ -57,20 +56,9 @@ func TestTokenizer(t *testing.T) {
 	for name, test := range tokenizerTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			tokenizer := NewTokenizer(strings.NewReader(test.input))
-
-			tokens := make([]Token, 0)
-			for {
-				token, err := tokenizer.Next()
-				if err != nil && err != io.EOF {
-					t.Error("Got unexpected error", err)
-				}
-
-				if token == nil {
-					t.Fatalf("The nil token returned when not nil was expected")
-				}
-
-				tokens = append(tokens, *token)
+			tokens, err := SplitToTokens(test.input)
+			if err != nil && err != io.EOF {
+				t.Error("unexpected error:", err)
 			}
 
 			if diff := cmp.Diff(test.expectedTokens, tokens); diff != "" {

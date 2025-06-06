@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"strings"
 )
 
 // The internal state used by the tokenizer state machine.
@@ -73,13 +74,13 @@ func (t *Tokenizer) scanStream() (*Token, error) {
 				case commentRuneClass:
 					{
 						// Good practice to begin any file with comments, let's switch to the `commentState` and
-						// set the Type to CommentToken
-						tokenType = CommentToken
+						// set the Type to TokenTypeComment
+						tokenType = TokenTypeComment
 						state = commentState
 					}
 				default:
 					{
-						tokenType = WordToken
+						tokenType = TokenTypeWord
 						value = append(value, nextRune)
 						state = inWordState
 					}
@@ -136,7 +137,7 @@ func (t *Tokenizer) scanStream() (*Token, error) {
 					{
 						// We consider this case as end of comment, let's flush consumed runes in Token.
 						token := &Token{
-							Type:  CommentToken,
+							Type:  TokenTypeComment,
 							Value: string(value),
 						}
 						return token, err
@@ -170,4 +171,19 @@ func (t *Tokenizer) scanStream() (*Token, error) {
 // Next returns the next token in the stream.
 func (t *Tokenizer) Next() (*Token, error) {
 	return t.scanStream()
+}
+
+func SplitToTokens(s string) ([]Token, error) {
+	t := NewTokenizer(strings.NewReader(s))
+	tokens := make([]Token, 0)
+	for {
+		token, err := t.Next()
+		if err != nil {
+			if err == io.EOF {
+				return append(tokens, *token), nil
+			}
+			return tokens, err
+		}
+		tokens = append(tokens, *token)
+	}
 }
