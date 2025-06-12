@@ -4,14 +4,15 @@ import "testing"
 
 func TestClassifier(t *testing.T) {
 	classifier := newRuneClassifier()
-	tests := map[rune]runeTokenClass{
-		' ':  spaceRuneClass,
-		'\t': spaceRuneClass,
-		'"':  quoteRuneClass,
-		'#':  commentRuneClass,
-		';':  commentRuneClass,
-		'\n': eolRuneClass,
-		'\r': eolRuneClass,
+	tests := map[rune]runeClass{
+		' ':  runeClassSpace,
+		'\t': runeClassSpace,
+		'a':  ruleClassUnknown,
+		//'"':  quoteRuneClass,
+		//'#':  commentRuneClass,
+		//';':  commentRuneClass,
+		//'\n': runeClassEol,
+		//'\r': runeClassEol,
 	}
 	for runeChar, want := range tests {
 		got := classifier.ClassifyRune(runeChar)

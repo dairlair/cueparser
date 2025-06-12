@@ -41,12 +41,25 @@ var tokenizerTests = map[string]struct {
 	//		},
 	//	},
 	//},
-	"one letter comment starting with semicolon": {
-		input: ";x",
+	//"one letter comment starting with semicolon": {
+	//	input: ";x",
+	//	expectedTokens: []Token{
+	//		{
+	//			Type:  TokenTypeComment,
+	//			Value: "x",
+	//		},
+	//	},
+	//},
+	"comment and end of line": {
+		input: ";abc\n",
 		expectedTokens: []Token{
 			{
 				Type:  TokenTypeComment,
-				Value: "x",
+				Value: "abc",
+			},
+			{
+				Type:  TokenTypeEndOfLine,
+				Value: "",
 			},
 		},
 	},
@@ -55,7 +68,7 @@ var tokenizerTests = map[string]struct {
 func TestTokenizer(t *testing.T) {
 	for name, test := range tokenizerTests {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 			tokens, err := SplitToTokens(test.input)
 			if err != nil && err != io.EOF {
 				t.Error("unexpected error:", err)

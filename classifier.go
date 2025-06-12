@@ -1,31 +1,38 @@
 package cueparser
 
-// runeTokenClass is the type of UTF-8 character classification: A quote, space, escape.
-type runeTokenClass int
+// runeClass is the type of UTF-8 character classification: A quote, space, escape, end of line, etc...
+type runeClass int
 
 // Classes of rune token
 const (
-	unknownRuneClass runeTokenClass = iota
-	spaceRuneClass
-	quoteRuneClass
-	commentRuneClass
-	eolRuneClass
-	eofRuneClass
+	ruleClassUnknown runeClass = iota
+	runeClassSpace
 )
+
+func (s runeClass) String() string {
+	switch s {
+	case ruleClassUnknown:
+		return "ruleClassUnknown"
+	case runeClassSpace:
+		return "runeClassSpace"
+	default:
+		return "Unknown"
+	}
+}
 
 // Named classes of UTF-8 runes
 const (
-	spaceRunes   = " \t"
-	quoteRunes   = `"`
-	commentRunes = "#;"
-	eolRunes     = "\r\n"
+	spaceRunes = " \t"
+	//quoteRunes   = `"`
+	//commentRunes = "#;"
+	//eolRunes     = "\r\n"
 )
 
 type runeClassifier struct {
-	mapping map[rune]runeTokenClass
+	mapping map[rune]runeClass
 }
 
-func (rc runeClassifier) addRuneClass(runes string, tokenType runeTokenClass) {
+func (rc runeClassifier) addRuneClass(runes string, tokenType runeClass) {
 	for _, runeChar := range runes {
 		rc.mapping[runeChar] = tokenType
 	}
@@ -34,15 +41,12 @@ func (rc runeClassifier) addRuneClass(runes string, tokenType runeTokenClass) {
 // newRuneClassifier creates a new classifier for ASCII characters.
 func newRuneClassifier() runeClassifier {
 	rc := runeClassifier{
-		mapping: map[rune]runeTokenClass{},
+		mapping: map[rune]runeClass{},
 	}
-	rc.addRuneClass(spaceRunes, spaceRuneClass)
-	rc.addRuneClass(quoteRunes, quoteRuneClass)
-	rc.addRuneClass(commentRunes, commentRuneClass)
-	rc.addRuneClass(eolRunes, eolRuneClass)
+	rc.addRuneClass(spaceRunes, runeClassSpace)
 	return rc
 }
 
-func (rc runeClassifier) ClassifyRune(runeVal rune) runeTokenClass {
+func (rc runeClassifier) ClassifyRune(runeVal rune) runeClass {
 	return rc.mapping[runeVal]
 }
