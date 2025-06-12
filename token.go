@@ -1,5 +1,9 @@
 package cueparser
 
+import (
+	"fmt"
+)
+
 // TokenType is a top-level token classification: A word, space, comment, unknown.
 
 type TokenType int
@@ -18,4 +22,12 @@ const (
 type Token struct {
 	Type  TokenType
 	Value string
+}
+
+func (t Token) String() string {
+	switch {
+	case t.Type == TokenTypeWord:
+		return fmt.Sprintf("%.10q...", t.Value)
+	}
+	return fmt.Sprintf("%q", t.Value)
 }
