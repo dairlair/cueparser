@@ -24,12 +24,14 @@ func NewTokenizer(r io.Reader) *Tokenizer {
 
 type tokenizerStateFn func(*Tokenizer) tokenizerStateFn
 
-func SplitToTokens(s string) ([]Token, error) {
-	return []Token{}, nil
-}
-
 func tokenizerStateStart(t *Tokenizer) tokenizerStateFn {
-	return nil
+	nextRune, _, err := t.r.ReadRune()
+	if err != nil {
+		if err == io.EOF {
+			t.tokens = append(t.tokens, Token{Typ: tokenTypeEof, Val: ""})
+		}
+
+	}
 }
 
 func Tokenize(input string) []Token {
