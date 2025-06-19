@@ -2,7 +2,6 @@ package cueparser
 
 import (
 	"github.com/google/go-cmp/cmp"
-	"io"
 	"testing"
 )
 
@@ -14,7 +13,7 @@ func mkToken(typ TokenType, val string) Token {
 }
 
 var (
-	tEOF = mkToken(tokenTypeEof, "")
+	tEOF = mkToken(tokenTypeEof, "EOF")
 )
 
 type tokTest struct {
@@ -29,10 +28,7 @@ var tokTests = []tokTest{
 
 func TestTokenizer(t *testing.T) {
 	for _, test := range tokTests {
-		tokens, err := SplitToTokens(test.input)
-		if err != nil && err != io.EOF {
-			t.Error("unexpected error:", err)
-		}
+		tokens := Tokenize(test.input)
 
 		if diff := cmp.Diff(test.tokens, tokens); diff != "" {
 			t.Errorf("Tokens mismatch (-want +got):\n%s", diff)

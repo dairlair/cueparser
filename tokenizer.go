@@ -1,43 +1,77 @@
 package cueparser
 
 import (
-	"bufio"
-	"io"
-	"strings"
+	"fmt"
+	"unicode/utf8"
 )
 
-type Tokenizer struct {
-	r          bufio.Reader
-	classifier runeClassifier
-	tokens     []Token
+const eof = -1
+
+type tokenizer struct {
+	input  string
+	pos    int
+	line   int
+	length int
+	token  Token
 }
 
-func NewTokenizer(r io.Reader) *Tokenizer {
-	input := bufio.NewReader(r)
-	classifier := newRuneClassifier()
-	return &Tokenizer{
-		r:          *input,
-		classifier: classifier,
-		tokens:     make([]Token, 0),
+func newTokenizer(input string) *tokenizer {
+	return &tokenizer{
+		input:  input,
+		length: len([]rune(input)),
 	}
 }
 
-type tokenizerStateFn func(*Tokenizer) tokenizerStateFn
+type stateFn func(*tokenizer) stateFn
 
-func tokenizerStateStart(t *Tokenizer) tokenizerStateFn {
-	nextRune, _, err := t.r.ReadRune()
-	if err != nil {
-		if err == io.EOF {
-			t.tokens = append(t.tokens, Token{Typ: tokenTypeEof, Val: ""})
-		}
-
+func tokenizerStart(t *tokenizer) stateFn {
+	switch r := t.nextRune(); {
+	case r == eof:
+		return nil
+	default:
+		return t.errorf("unexpected rune %c", r)
 	}
 }
 
-func Tokenize(input string) []Token {
-	t := NewTokenizer(strings.NewReader(input))
-	for state := tokenizerStateStart; state != nil; {
+func (t *tokenizer) nextRune() rune {
+	if t.pos >= len(t.input) {
+		return eof
+	}
+
+	r, w := utf8.DecodeRuneInString(t.input[t.pos:])
+	t.pos += w
+	if r == '\n' {
+		t.line++
+	}
+	return r
+}
+
+func (t *tokenizer) nextToken() Token {
+	t.token = Token{tokenTypeEof, "EOF"}
+	state := tokenizerStart
+	for {
 		state = state(t)
+		if state == nil {
+			return t.token
+		}
 	}
-	return t.tokens
+}
+
+// errorf returns an error token and terminates the scan by passing
+// back a nil pointer that will be the next state, terminating t.nextToken.
+func (t *tokenizer) errorf(format string, args ...any) stateFn {
+	t.token = Token{Typ: TokenTypeError, Val: fmt.Sprintf(format, args...)}
+	return nil
+}
+
+func Tokenize(input string) (tokens []Token) {
+	tr := newTokenizer(input)
+	for {
+		token := tr.nextToken()
+		tokens = append(tokens, token)
+		if token.Typ == tokenTypeEof || token.Typ == TokenTypeError {
+			break
+		}
+	}
+	return
 }
