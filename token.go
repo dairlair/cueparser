@@ -6,7 +6,8 @@ type TokenType int
 
 // Classes of lexic tokens
 const (
-	TokenTypeError TokenType = iota
+	tokenTypeError TokenType = iota
+	tokenTypeSpace
 	//// tokenTypeEol is being used as dedicated type because:
 	//// > Each line in the cue sheet file defines a command, such as FILE, TRACK, INDEX, TITLE, PERFORMER, etc.
 	//tokenTypeEol // The main

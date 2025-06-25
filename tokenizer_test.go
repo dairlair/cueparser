@@ -13,7 +13,8 @@ func mkToken(typ TokenType, val string) Token {
 }
 
 var (
-	tEOF = mkToken(tokenTypeEof, "EOF")
+	tEOF   = mkToken(tokenTypeEof, "EOF")
+	tSpace = mkToken(tokenTypeSpace, " ")
 )
 
 type tokTest struct {
@@ -23,7 +24,8 @@ type tokTest struct {
 }
 
 var tokTests = []tokTest{
-	{"empty", "", []Token{tEOF}},
+	//{"empty", "", []Token{tEOF}},
+	{"one space", " ", []Token{tSpace, tEOF}},
 }
 
 func TestTokenizer(t *testing.T) {

@@ -10,6 +10,7 @@ const eof = -1
 type tokenizer struct {
 	input  string
 	pos    int
+	start  int
 	line   int
 	length int
 	token  Token
@@ -26,10 +27,25 @@ type stateFn func(*tokenizer) stateFn
 
 func tokenizerStart(t *tokenizer) stateFn {
 	switch r := t.nextRune(); {
+	case isSpace(r):
+		return tokenizeSpace
+	case r == eof:
+		return nil
+		// This default logic is not correct, fix it as well
+	default:
+		return t.errorf("unexpected rune %c", r)
+	}
+}
+
+func tokenizeSpace(t *tokenizer) stateFn {
+	switch r := t.nextRune(); {
+	case isSpace(r):
+		return tokenizeSpace
 	case r == eof:
 		return nil
 	default:
-		return t.errorf("unexpected rune %c", r)
+		// With any another rune (non-space and non-eof) we emit the `tokenTypeSpace`
+		return t.emit(tokenTypeSpace)
 	}
 }
 
@@ -46,6 +62,32 @@ func (t *tokenizer) nextRune() rune {
 	return r
 }
 
+// errorf returns an error token and terminates the scan by passing
+// back a nil pointer that will be the next state, terminating t.nextToken.
+func (t *tokenizer) errorf(format string, args ...any) stateFn {
+	t.token = Token{Typ: tokenTypeError, Val: fmt.Sprintf(format, args...)}
+	return nil
+}
+
+// thisItem returns the item at the current input point with the specified type
+// and advances the input.
+func (t *tokenizer) thisItem(typ TokenType) Token {
+	i := Token{typ, t.input[t.start:t.pos]}
+	t.start = t.pos
+	return i
+}
+
+// emit passes the trailing text as an item back to the parser.
+func (t *tokenizer) emit(typ TokenType) stateFn {
+	return t.emitItem(t.thisItem(typ))
+}
+
+// emitItem passes the specified item to the parser.
+func (t *tokenizer) emitItem(tk Token) stateFn {
+	t.token = tk
+	return nil
+}
+
 func (t *tokenizer) nextToken() Token {
 	t.token = Token{tokenTypeEof, "EOF"}
 	state := tokenizerStart
@@ -57,21 +99,19 @@ func (t *tokenizer) nextToken() Token {
 	}
 }
 
-// errorf returns an error token and terminates the scan by passing
-// back a nil pointer that will be the next state, terminating t.nextToken.
-func (t *tokenizer) errorf(format string, args ...any) stateFn {
-	t.token = Token{Typ: TokenTypeError, Val: fmt.Sprintf(format, args...)}
-	return nil
-}
-
 func Tokenize(input string) (tokens []Token) {
 	tr := newTokenizer(input)
 	for {
 		token := tr.nextToken()
 		tokens = append(tokens, token)
-		if token.Typ == tokenTypeEof || token.Typ == TokenTypeError {
+		if token.Typ == tokenTypeEof || token.Typ == tokenTypeError {
 			break
 		}
 	}
 	return
+}
+
+// isSpace reports whether r is a space character.
+func isSpace(r rune) bool {
+	return r == ' ' || r == '\t'
 }
