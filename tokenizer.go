@@ -30,8 +30,8 @@ func tokenizerStart(t *tokenizer) stateFn {
 	case isSpace(r):
 		return tokenizeSpace
 	case r == eof:
-		return nil
 		// This default logic is not correct, fix it as well
+		return nil
 	default:
 		return t.errorf("unexpected rune %c", r)
 	}
@@ -42,7 +42,8 @@ func tokenizeSpace(t *tokenizer) stateFn {
 	case isSpace(r):
 		return tokenizeSpace
 	case r == eof:
-		return nil
+		//t.pos-- // move to the l.next() and t.peek() function and take into account the rune width
+		return t.emit(tokenTypeSpace)
 	default:
 		// With any another rune (non-space and non-eof) we emit the `tokenTypeSpace`
 		return t.emit(tokenTypeSpace)
@@ -79,7 +80,9 @@ func (t *tokenizer) thisItem(typ TokenType) Token {
 
 // emit passes the trailing text as an item back to the parser.
 func (t *tokenizer) emit(typ TokenType) stateFn {
+
 	return t.emitItem(t.thisItem(typ))
+
 }
 
 // emitItem passes the specified item to the parser.

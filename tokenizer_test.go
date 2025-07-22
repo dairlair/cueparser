@@ -24,8 +24,8 @@ type tokTest struct {
 }
 
 var tokTests = []tokTest{
-	//{"empty", "", []Token{tEOF}},
-	{"one space", " ", []Token{tSpace, tEOF}},
+	{"empty", "", []Token{tEOF}},
+	{"only one space", " ", []Token{tSpace, tEOF}},
 }
 
 func TestTokenizer(t *testing.T) {
